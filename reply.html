@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reply to visitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#faf8f3; --ink:#1c2b2e; --muted:#66756f; --accent:#0f766e; --accent-ink:#eafff9; --card:#fff; --line:#e6e2d6; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#0f1618; --ink:#eef3f1; --muted:#8fa19c; --accent:#2dd4bf; --accent-ink:#06201d; --card:#182224; --line:#293533; }
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px;
+         background:var(--bg); color:var(--ink); font:16px/1.55 system-ui,-apple-system,sans-serif; }
+  main { width:100%; max-width:380px; }
+  h1 { font:700 22px "Space Grotesk",system-ui; margin:0 0 6px; }
+  p { color:var(--muted); margin:0 0 18px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:18px; padding:20px; }
+  .quick { display:grid; gap:8px; margin-bottom:14px; }
+  button.q { font:inherit; padding:13px 14px; border-radius:12px; border:1px solid var(--line); background:transparent;
+             color:var(--ink); text-align:left; cursor:pointer; }
+  input { font:inherit; width:100%; padding:12px 14px; margin-bottom:12px; border-radius:12px; border:1px solid var(--line);
+          background:transparent; color:var(--ink); }
+  button#custom { width:100%; padding:13px; border-radius:12px; border:0; background:var(--accent); color:var(--accent-ink);
+                  font-weight:700; cursor:pointer; }
+  #status { margin-top:12px; font-size:14px; min-height:1.4em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Reply to visitor</h1>
+  <p>They're waiting by the car. Your reply appears on their screen — no numbers shared.</p>
+  <div class="card">
+    <div class="quick">
+      <button class="q" type="button" data-m="On my way now.">On my way now</button>
+      <button class="q" type="button" data-m="Give me 2 minutes.">Give me 2 minutes</button>
+      <button class="q" type="button" data-m="Give me 10 minutes.">Give me 10 minutes</button>
+      <button class="q" type="button" data-m="Please wait, I'm not near the car.">I'm not near the car</button>
+    </div>
+    <input id="custom" type="text" placeholder="Or type your own reply" maxlength="200">
+    <button id="custom" type="button" onclick="sendMsg(document.getElementById('custom').value)">Send</button>
+    <div id="status" role="status" aria-live="polite"></div>
+  </div>
+</main>
+<script>
+  var params = new URLSearchParams(location.search);
+  var topic = params.get("t");
+  var statusEl = document.getElementById("status");
+
+  document.querySelectorAll("button.q").forEach(function (b) {
+    b.addEventListener("click", function () { sendMsg(b.dataset.m); });
+  });
+
+  function sendMsg(text) {
+    text = (text || "").trim();
+    if (!topic) { statusEl.textContent = "This link is missing its reply code."; return; }
+    if (!text) { statusEl.textContent = "Write or pick a reply first."; return; }
+    statusEl.textContent = "Sending…";
+    fetch("https://ntfy.sh/" + encodeURIComponent(topic), { method: "POST", body: text })
+      .then(function (r) { if (!r.ok) throw new Error();
+        statusEl.textContent = "Sent."; })
+      .catch(function () { statusEl.textContent = "Couldn't send. Try again."; });
+  }
+</script>
+</body>
+</html>
